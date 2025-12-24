@@ -3,6 +3,11 @@ import postgres from "postgres";
 
 import * as schema from "./schema";
 
-const client = postgres(process.env.DATABASE_URL!);
+// IMPORTANT: Supabase + serverless require these options
+const client = postgres(process.env.DATABASE_URL!, {
+  ssl: "require",
+  prepare: false,
+  max: 1, // prevents connection explosion on Vercel
+});
 
 export const db = drizzle(client, { schema });

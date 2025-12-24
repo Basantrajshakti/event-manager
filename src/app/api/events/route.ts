@@ -4,6 +4,8 @@ import { events } from "@/db/schema";
 import { eventSchema } from "@/lib/validations/event";
 import { desc } from "drizzle-orm";
 
+export const runtime = "nodejs";
+
 export type CreateEventResponse = {
   success: boolean;
   data?: typeof events.$inferSelect;
@@ -22,32 +24,27 @@ export async function POST(request: NextRequest) {
     const validation = eventSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { success: false, error: validation.error.issues[0]?.message || "Invalid input" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: validation.error.issues[0]?.message || "Invalid input" }, { status: 400 });
     }
 
     const { title, description, date, location } = validation.data;
 
-    const [newEvent] = await db.insert(events).values({
-      title,
-      description,
-      date,
-      location,
-    }).returning();
+    const [newEvent] = await db
+      .insert(events)
+      .values({
+        title,
+        description,
+        date,
+        location,
+      })
+      .returning();
 
     return NextResponse.json({ success: true, data: newEvent }, { status: 201 });
   } catch (error) {
     console.error("Error creating event:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-
 
 export async function GET() {
   try {
@@ -60,9 +57,6 @@ export async function GET() {
     // @ts-ignore
     const stack = error?.stack || "";
     console.error("Detailed Error:", message, stack);
-    return NextResponse.json(
-      { success: false, error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
 }
